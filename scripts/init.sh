@@ -17,7 +17,7 @@ nvm use 18
 echo "nvm use 18" >> ~/.bashrc
 cd /workspace
 
-bench init --version-15 \ 
+bench init --frappe-branch version-15 \ 
 --ignore-exist \
 --skip-redis-config-generation \
 frappe-bench
