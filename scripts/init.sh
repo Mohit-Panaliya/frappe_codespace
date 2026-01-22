@@ -44,7 +44,7 @@ if ! command -v uv &> /dev/null; then
 fi
 
 # Recommended Python for Frappe 16
-uv python install 3.13 --default
+uv python install 3.14 --default
 
 # -----------------------------
 # Bench CLI
