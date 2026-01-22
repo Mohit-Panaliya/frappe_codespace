@@ -81,14 +81,27 @@ sed -i '/redis/d' Procfile
 # -----------------------------
 # Create Development Site
 # -----------------------------
+# bench new-site dev.localhost \
+#     --mariadb-root-password 123 \
+#     --admin-password admin \
+#     --no-mariadb-socket
+
+# bench --site dev.localhost set-config developer_mode 1
+# bench --site dev.localhost clear-cache
+# bench use dev.localhost
+
+# -----------------------------
+# Create Development Site (Frappe 16)
+# -----------------------------
 bench new-site dev.localhost \
     --mariadb-root-password 123 \
     --admin-password admin \
-    --no-mariadb-socket
+    --mariadb-user-host-login-scope='%'
 
 bench --site dev.localhost set-config developer_mode 1
 bench --site dev.localhost clear-cache
 bench use dev.localhost
+
 
 echo "✅ Frappe 16 setup complete!"
 echo "➡️  Run: bench start"
