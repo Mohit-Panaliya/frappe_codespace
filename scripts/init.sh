@@ -68,47 +68,29 @@ bench init frappe-bench \
 cd frappe-bench
 
 # -----------------------------
-# Container-based Services
+# Container-based Services (FIXED FOR v16)
 # -----------------------------
 bench set-mariadb-host mariadb
-bench set-redis-cache-host redis-cache:6379
-bench set-redis-queue-host redis-queue:6379
-bench set-redis-socketio-host redis-socketio:6379
+bench set-redis-cache-host redis://redis-cache:6379
+bench set-redis-queue-host redis://redis-queue:6379
+bench set-redis-socketio-host redis://redis-socketio:6379
 
 # Remove redis services from Procfile (Docker-managed)
 sed -i '/redis/d' Procfile
 
 # -----------------------------
-# Ensure MariaDB root user works non-interactively
+# Create Development Site
 # -----------------------------
-# Wait for MariaDB container to be ready
-echo "⏳ Waiting for MariaDB to be ready..."
-until docker exec mariadb mysqladmin ping -uroot -p123 --silent &> /dev/null; do
-    sleep 2
-done
-echo "✅ MariaDB is ready"
+# bench new-site mysite.local \
+#     --mariadb-root-password 123 \
+#     --admin-password admin \
+#     --mariadb-user-host-login-scope='%' \
+#     --force
 
-# Grant root access from any host
-docker exec mariadb mysql -uroot -p123 -e "ALTER USER 'root'@'%' IDENTIFIED BY '123'; FLUSH PRIVILEGES;"
-
-# -----------------------------
-# Install expect for automated Enter
-# -----------------------------
-apt-get update && apt-get install -y expect
-
-# -----------------------------
-# Create Development Site (Frappe 16) non-interactively
-# -----------------------------
-expect -c "
-spawn bench new-site dev.localhost --admin-password admin --mariadb-user-host-login-scope='%'
-expect \"Enter mysql super user [root]:\"
-send \"\r\"
-expect eof
-"
-
-bench --site dev.localhost set-config developer_mode 1
-bench --site dev.localhost clear-cache
-bench use dev.localhost
+# bench --site mysite.local set-config developer_mode 1
+# bench --site mysite.local clear-cache
+# bench use mysite.local
+# bench start
 
 echo "✅ Frappe 16 setup complete!"
-echo "➡️ Run: bench start"
+echo "➡️  Run: bench start"
