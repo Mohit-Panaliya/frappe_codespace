@@ -68,12 +68,12 @@ bench init frappe-bench \
 cd frappe-bench
 
 # -----------------------------
-# Container-based Services
+# Container-based Services (FIXED FOR v16)
 # -----------------------------
 bench set-mariadb-host mariadb
-bench set-redis-cache-host redis-cache:6379
-bench set-redis-queue-host redis-queue:6379
-bench set-redis-socketio-host redis-socketio:6379
+bench set-redis-cache-host redis://redis-cache:6379
+bench set-redis-queue-host redis://redis-queue:6379
+bench set-redis-socketio-host redis://redis-socketio:6379
 
 # Remove redis services from Procfile (Docker-managed)
 sed -i '/redis/d' Procfile
