@@ -44,7 +44,7 @@ if ! command -v uv &> /dev/null; then
 fi
 
 # Recommended Python for Frappe 16
-uv python install 3.14 --default
+uv python install 3.13 --default
 
 # -----------------------------
 # Bench CLI
@@ -68,41 +68,47 @@ bench init frappe-bench \
 cd frappe-bench
 
 # -----------------------------
-# Container-based Services (FIXED FOR v16)
+# Container-based Services
 # -----------------------------
 bench set-mariadb-host mariadb
-bench set-redis-cache-host redis://redis-cache:6379
-bench set-redis-queue-host redis://redis-queue:6379
-bench set-redis-socketio-host redis://redis-socketio:6379
+bench set-redis-cache-host redis-cache:6379
+bench set-redis-queue-host redis-queue:6379
+bench set-redis-socketio-host redis-socketio:6379
 
 # Remove redis services from Procfile (Docker-managed)
 sed -i '/redis/d' Procfile
 
 # -----------------------------
-# Create Development Site
+# Ensure MariaDB root user works non-interactively
 # -----------------------------
-# bench new-site dev.localhost \
-#     --mariadb-root-password 123 \
-#     --admin-password admin \
-#     --no-mariadb-socket
+# Wait for MariaDB container to be ready
+echo "⏳ Waiting for MariaDB to be ready..."
+until docker exec mariadb mysqladmin ping -uroot -p123 --silent &> /dev/null; do
+    sleep 2
+done
+echo "✅ MariaDB is ready"
 
-# bench --site dev.localhost set-config developer_mode 1
-# bench --site dev.localhost clear-cache
-# bench use dev.localhost
+# Grant root access from any host
+docker exec mariadb mysql -uroot -p123 -e "ALTER USER 'root'@'%' IDENTIFIED BY '123'; FLUSH PRIVILEGES;"
 
 # -----------------------------
-# Create Development Site (Frappe 16)
+# Install expect for automated Enter
 # -----------------------------
-bench new-site dev.localhost \
-    --mariadb-root-password 123 \
-    --admin-password admin \
-    --mariadb-user-host-login-scope='%' \
-    --force
+apt-get update && apt-get install -y expect
+
+# -----------------------------
+# Create Development Site (Frappe 16) non-interactively
+# -----------------------------
+expect -c "
+spawn bench new-site dev.localhost --admin-password admin --mariadb-user-host-login-scope='%'
+expect \"Enter mysql super user [root]:\"
+send \"\r\"
+expect eof
+"
 
 bench --site dev.localhost set-config developer_mode 1
 bench --site dev.localhost clear-cache
 bench use dev.localhost
 
-
 echo "✅ Frappe 16 setup complete!"
-echo "➡️  Run: bench start"
+echo "➡️ Run: bench start"
